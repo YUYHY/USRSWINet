@@ -102,12 +102,8 @@ class ModelBase():
         """
         network = network.to(self.device)
         if self.opt['dist']:
-            find_unused_parameters = self.opt.get('find_unused_parameters', True)
-            use_static_graph = self.opt.get('use_static_graph', False)
+            find_unused_parameters = self.opt['find_unused_parameters']
             network = DistributedDataParallel(network, device_ids=[torch.cuda.current_device()], find_unused_parameters=find_unused_parameters)
-            if use_static_graph:
-                print('Using static graph. Make sure that "unused parameters" will not change during training loop.')
-                network._set_static_graph()
         else:
             network = DataParallel(network)
         return network
@@ -159,11 +155,22 @@ class ModelBase():
     # load the state_dict of the network
     # ----------------------------------------
     def load_network(self, load_path, network, strict=True, param_key='params'):
-        network = self.get_bare_model(network)
+        # if isinstance(network, (DataParallel, DistributedDataParallel)):
+        #     print("self.get_bare_model is activated")
+        # else:
+        #     print("self.get_bare_model is not activated")
+        network = self.get_bare_model(network) #network changed
+        
+        
         if strict:
             state_dict = torch.load(load_path)
+            checkpoint_load = torch.load(load_path)
+
             if param_key in state_dict.keys():
+                # print("param_key in state_dict.keys()")
                 state_dict = state_dict[param_key]
+            # print("before network.load_state_dict, what is the state_dict: ", state_dict)
+            # print("-----------------------debug information-----------------------")
             network.load_state_dict(state_dict, strict=strict)
         else:
             state_dict_old = torch.load(load_path)
@@ -174,6 +181,8 @@ class ModelBase():
                 state_dict[key] = param_old
             network.load_state_dict(state_dict, strict=True)
             del state_dict_old, state_dict
+
+        
 
     # ----------------------------------------
     # save the state_dict of the optimizer

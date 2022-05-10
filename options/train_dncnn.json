@@ -18,7 +18,7 @@
     "train": {
       "name": "train_dataset"           // just name
       , "dataset_type": "dncnn"         // "dncnn" | "dnpatch" for dncnn,  | "fdncnn" | "ffdnet" | "sr" | "srmd" | "dpsr" | "plain" | "plainpatch"
-      , "dataroot_H": "trainsets/trainH"// path of H training dataset
+      , "dataroot_H": "DIV2K/DIV2K_valid_HR"// path of H training dataset
       , "dataroot_L": null              // path of L training dataset
       , "H_size": 40                    // patch size 40 | 64 | 96 | 128 | 192
 
@@ -32,7 +32,7 @@
     , "test": {
       "name": "test_dataset"            // just name
       , "dataset_type": "dncnn"         // "dncnn" | "dnpatch" for dncnn,  | "fdncnn" | "ffdnet" | "sr" | "srmd" | "dpsr" | "plain" | "plainpatch"
-      , "dataroot_H": "testsets/bsd68"  // path of H testing dataset
+      , "dataroot_H": "testsets/set5"  // path of H testing dataset
       , "dataroot_L": null              // path of L testing dataset
 
       , "sigma": 25                     // 15, 25, 50 for DnCNN | [0, 75] for FFDNet and FDnCNN

@@ -169,6 +169,21 @@ def define_G(opt):
                    downsample_mode=opt_net['downsample_mode'],
                    upsample_mode=opt_net['upsample_mode']
                    )
+    # ----------------------------------------
+    # USRNet_ST
+    # ----------------------------------------
+    elif net_type == 'usrnet_ST':
+        from models.network_usrnet_ST import USRNet_ST as net
+        netG = net(n_iter=opt_net['n_iter'],
+                   h_nc=opt_net['h_nc'],
+                   in_nc=opt_net['in_nc'],
+                   out_nc=opt_net['out_nc'],
+                   nc=opt_net['nc'],
+                   nb=opt_net['nb'],
+                   act_mode=opt_net['act_mode'],
+                   downsample_mode=opt_net['downsample_mode'],
+                   upsample_mode=opt_net['upsample_mode']
+                   )
 
     # ----------------------------------------
     # Deep Residual U-Net (drunet)
@@ -200,27 +215,6 @@ def define_G(opt):
                    mlp_ratio=opt_net['mlp_ratio'],
                    upsampler=opt_net['upsampler'],
                    resi_connection=opt_net['resi_connection'])
-
-    # ----------------------------------------
-    # VRT
-    # ----------------------------------------
-    elif net_type == 'vrt':
-        from models.network_vrt import VRT as net
-        netG = net(upscale=opt_net['upscale'],
-                   img_size=opt_net['img_size'],
-                   window_size=opt_net['window_size'],
-                   depths=opt_net['depths'],
-                   indep_reconsts=opt_net['indep_reconsts'],
-                   embed_dims=opt_net['embed_dims'],
-                   num_heads=opt_net['num_heads'],
-                   spynet_path=opt_net['spynet_path'],
-                   pa_frames=opt_net['pa_frames'],
-                   deformable_groups=opt_net['deformable_groups'],
-                   nonblind_denoising=opt_net['nonblind_denoising'],
-                   use_checkpoint_attn=opt_net['use_checkpoint_attn'],
-                   use_checkpoint_ffn=opt_net['use_checkpoint_ffn'],
-                   no_checkpoint_attn_blocks=opt_net['no_checkpoint_attn_blocks'],
-                   no_checkpoint_ffn_blocks=opt_net['no_checkpoint_ffn_blocks'])
 
     # ----------------------------------------
     # others
@@ -405,4 +399,4 @@ def init_weights(net, init_type='xavier_uniform', init_bn_type='uniform', gain=1
         fn = functools.partial(init_fn, init_type=init_type, init_bn_type=init_bn_type, gain=gain)
         net.apply(fn)
     else:
-        print('Pass this initialization! Initialization was done during network definition!')
+        print('Pass this initialization! Initialization was done during network defination!')

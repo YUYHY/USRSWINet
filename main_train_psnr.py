@@ -18,6 +18,9 @@ from utils.utils_dist import get_dist_info, init_dist
 from data.select_dataset import define_Dataset
 from models.select_model import define_Model
 
+# from torch.utils.tensorboard import SummaryWriter
+# writer = SummaryWriter()
+
 
 '''
 # --------------------------------------------
@@ -54,7 +57,7 @@ def main(json_path='options/train_msrresnet_psnr.json'):
     if opt['dist']:
         init_dist('pytorch')
     opt['rank'], opt['world_size'] = get_dist_info()
-
+    
     if opt['rank'] == 0:
         util.mkdirs((path for key, path in opt['path'].items() if 'pretrained' not in key))
 
@@ -145,7 +148,10 @@ def main(json_path='options/train_msrresnet_psnr.json'):
                                      drop_last=False, pin_memory=True)
         else:
             raise NotImplementedError("Phase [%s] is not recognized." % phase)
-
+  
+    print("train_loader length ", len(train_loader))
+    print("test_loader length ", len(test_loader))
+   
     '''
     # ----------------------------------------
     # Step--3 (initialize model)
@@ -165,9 +171,6 @@ def main(json_path='options/train_msrresnet_psnr.json'):
     '''
 
     for epoch in range(1000000):  # keep running
-        if opt['dist']:
-            train_sampler.set_epoch(epoch)
-
         for i, train_data in enumerate(train_loader):
 
             current_step += 1
@@ -180,6 +183,7 @@ def main(json_path='options/train_msrresnet_psnr.json'):
             # -------------------------------
             # 2) feed patch pairs
             # -------------------------------
+            # print("train_data_size", train_data['L'].shape, train_data['H'].shape)
             model.feed_data(train_data)
 
             # -------------------------------
@@ -195,6 +199,7 @@ def main(json_path='options/train_msrresnet_psnr.json'):
                 message = '<epoch:{:3d}, iter:{:8,d}, lr:{:.3e}> '.format(epoch, current_step, model.current_learning_rate())
                 for k, v in logs.items():  # merge log information into message
                     message += '{:s}: {:.3e} '.format(k, v)
+                    # writer.add_scalar("G_Loss/train", loss, epoch)
                 logger.info(message)
 
             # -------------------------------
@@ -246,6 +251,11 @@ def main(json_path='options/train_msrresnet_psnr.json'):
 
                 # testing log
                 logger.info('<epoch:{:3d}, iter:{:8,d}, Average PSNR : {:<.2f}dB\n'.format(epoch, current_step, avg_psnr))
+                # writer.add_scalar("Loss-Average PSNR/test", avg_psnr, epoch)
+
+                # writer.flush()
+                # writer.close()
+
 
 if __name__ == '__main__':
     main()

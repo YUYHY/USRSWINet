@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "main_train_psnr.py", line 261, in <module>
+    main()
+  File "main_train_psnr.py", line 51, in main
+    opt = option.parse(parser.parse_args().opt, is_train=True)
+  File "/home/jiezcao/hongyu/USRSWINet/utils/utils_option.py", line 61, in parse
+    dataset['dataroot_H'] = os.path.expanduser(dataset['dataroot_H'])
+  File "/scratch_net/ken/jiezcao/anaconda3/envs/usrswin/lib/python3.7/posixpath.py", line 235, in expanduser
+    path = os.fspath(path)
+TypeError: expected str, bytes or os.PathLike object, not list

@@ -102,7 +102,7 @@ class WindowAttention(nn.Module):
         relative_position_index = relative_coords.sum(-1)  # Wh*Ww, Wh*Ww
         self.register_buffer("relative_position_index", relative_position_index)
 
-        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
+        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias) # 64->192
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(dim, dim)
 
@@ -117,7 +117,15 @@ class WindowAttention(nn.Module):
             x: input features with shape of (num_windows*B, N, C)
             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
         """
+        # print("x shape: ", x.shape)
+        # torch.Size([768, 9, 64])
         B_, N, C = x.shape
+
+        # print("qkv(x) shape: ", self.qkv(x).shape)
+        # torch.Size([768, 9, 192])
+
+        # print("self.num_heads: ", self.num_heads)
+        # 4
         qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
 
@@ -496,7 +504,7 @@ class PatchEmbed(nn.Module):
     r""" Image to Patch Embedding
 
     Args:
-        img_size (int): Image size.  Default: 224.
+        img_size (int): Image size.  Default: 224. 
         patch_size (int): Patch token size. Default: 4.
         in_chans (int): Number of input image channels. Default: 3.
         embed_dim (int): Number of linear projection output channels. Default: 96.
@@ -507,22 +515,33 @@ class PatchEmbed(nn.Module):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
-        patches_resolution = [img_size[0] // patch_size[0], img_size[1] // patch_size[1]]
+        patches_resolution = [img_size[0] // patch_size[0], img_size[1] // patch_size[1]]#[48, 48] in res3
         self.img_size = img_size
         self.patch_size = patch_size
         self.patches_resolution = patches_resolution
-        self.num_patches = patches_resolution[0] * patches_resolution[1]
+        self.num_patches = patches_resolution[0] * patches_resolution[1] # 2304 in res3
 
         self.in_chans = in_chans
         self.embed_dim = embed_dim
 
+        # print("one if/else")
         if norm_layer is not None:
             self.norm = norm_layer(embed_dim)
+            # print("embed_dim of norm_layer: ", embed_dim)
         else:
             self.norm = None
 
     def forward(self, x):
+        # print("input x size in [PatchEmbded]: ", x.size())
+        # torch.Size([48, 64, 24, 24])
+        # torch.Size([48, 32, 48, 48]) in res3
+
         x = x.flatten(2).transpose(1, 2)  # B Ph*Pw C
+        # print("x size before normalize in [PatchEmbded]: ", x.size())
+        # torch.Size([48, 576, 64])
+
+        # [48, 2304, 32]
+
         if self.norm is not None:
             x = self.norm(x)
         return x
@@ -681,6 +700,10 @@ class SwinIR(nn.Module):
         self.patch_embed = PatchEmbed(
             img_size=img_size, patch_size=patch_size, in_chans=embed_dim, embed_dim=embed_dim,
             norm_layer=norm_layer if self.patch_norm else None)
+        #--------------------------------------------------------
+        # 48. 1, 32, 32, nn.norm
+        #--------------------------------------------------------
+        
         num_patches = self.patch_embed.num_patches
         patches_resolution = self.patch_embed.patches_resolution
         self.patches_resolution = patches_resolution
@@ -789,7 +812,10 @@ class SwinIR(nn.Module):
 
     def forward_features(self, x):
         x_size = (x.shape[2], x.shape[3])
-        x = self.patch_embed(x)
+        # print("input image size before patch embed: ", x.shape)
+        # torch.Size([48, 32, 48, 48]) in res3
+
+        x = self.patch_embed(x) #大小不对齐
         if self.ape:
             x = x + self.absolute_pos_embed
         x = self.pos_drop(x)
@@ -801,6 +827,36 @@ class SwinIR(nn.Module):
         x = self.patch_unembed(x, x_size)
 
         return x
+
+    def forward_features_only(self, x):
+        H, W = x.shape[2:]
+        # print("input image size: ", x.shape)
+        # torch.Size([48, 64, 12, 12])
+        # torch.Size([48, 32, 48, 48]) in res3
+
+        # print("before check image: ", x.shape)
+        x = self.check_image_size(x) 
+        # print("after check image: ", x.shape)
+        # torch.Size([48, 64, 12, 12])
+        # torch.Size([48, 32, 48, 48]) in res3
+       
+
+        # print("self.mean size: ", self.mean.shape)
+        # torch.Size([1, 3, 1, 1])
+
+        self.mean = self.mean.type_as(x)
+        x = (x - self.mean) * self.img_range
+
+        # print("image size of forward_features input: ", x.size())
+        # torch.Size([48, 32, 48, 48]) in res3
+        x = self.forward_features(x) + x  #deep feature extraction
+
+        x = x / self.img_range + self.mean
+
+        # print("before return of forward_features_only: ", x.shape)
+        # print("return of forward_features_only: ", x[:, :, :H*self.upscale, :W*self.upscale].shape)
+        return x[:, :, :H*self.upscale, :W*self.upscale]
+
 
     def forward(self, x):
         H, W = x.shape[2:]

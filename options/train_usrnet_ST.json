@@ -1,0 +1,101 @@
+{
+  "task": "usrnet_ST" //  *
+  , "model": "plain4" // Train with four inputs (L, k, sf, sigma) and with pixel loss
+  , "gpu_ids": [0] // swinir employ 8 gpu and trained distributedly
+  , "scale": 4 
+  , "n_channels": 3 // 1 for grayscale image restoration, 3 for color image restoration
+  , "merge_bn": false // *
+  , "merge_bn_startpoint": 300000 // *
+
+  , "datasets": {
+    "train": {
+      "name": "train_dataset"
+      , "dataset_type": "usrnet"
+      , "dataroot_H": ["/scratch_net/ken/jiezcao/data/Flickr2K/Flickr2K_HR", "/scratch_net/ken/jiezcao/data/DIV2K/DIV2K_train_HR"] //TODO: same as usrnet
+      , "dataroot_L": null //TODO: same as usrnet- should be null
+      , "H_size": 96 // 128 | 192
+      , "use_flip": true
+      , "use_rot": true
+      , "scales": [1, 2, 3, 4]
+      , "dataloader_shuffle": true
+      , "dataloader_num_workers": 8
+      , "dataloader_batch_size": 3 //8 //24 // 48
+    }
+    , "test": {
+      "name": "test_dataset"
+      , "dataset_type": "usrnet"
+      , "dataroot_H": "/scratch_net/ken/jiezcao/data/CBSD68/original_png" //TODO: same as usrnet
+      , "dataroot_L": null //TODO: same as usrnet- should be null
+    }
+  }
+
+  , "path": {
+    "root": "SR" //save trained/training model
+    , "pretrained_netG": null
+  }
+
+  , "netG": {
+    "net_type": "usrnet_ST" // usrnet |"srresnet" | "rrdbnet" | "rcan" | "unet" | "unetplus" | "nonlocalunet"
+    , "n_iter": 6 // 8
+    , "h_nc": 32 // 64
+    , "in_nc": 4
+    // "in_chans": 3 
+    // , "img_size": 48   
+    , "out_nc": 3
+    , "nc": [16, 32, 64, 64] // [64, 128, 256, 512] for "unet"
+    , "nb": 2 //*
+    , "gc": 32 //*
+    , "ng": 2 //*
+    , "reduction" : 16
+    , "act_mode": "R" // "BR" for BN+ReLU | "R" for ReLU
+    , "upsample_mode": "convtranspose" // "pixelshuffle" | "convtranspose" | "upconv"
+    , "downsample_mode": "strideconv" // "strideconv" | "avgpool" | "maxpool"
+
+    // , "init_type": "default"
+    , "init_type": "orthogonal" // "orthogonal" | "normal" | "uniform" | "xavier_normal" | "xavier_uniform" | "kaiming_normal" | "kaiming_uniform"
+    , "init_bn_type": "uniform" // "uniform" | "constant"
+    , "init_gain": 0.2
+
+    //swinblock parameter
+    , "window_size": 8  
+    , "img_range": 1.0 
+    , "depths": [6, 6, 6, 6, 6, 6] 
+    , "embed_dim": 180 
+    , "num_heads": [6, 6, 6, 6, 6, 6]
+    , "mlp_ratio": 2 
+
+    //upsample is mot used in bridge 
+    // , "upsampler": "pixelshuffle"        // "pixelshuffle" | "pixelshuffledirect" | "nearest+conv" | null
+    , "resi_connection": "1conv"        // "1conv" | "3conv"
+
+  }
+
+  , "train": {
+    "G_lossfn_type": "l1" // "l1" | "l2sum" | "l2" | "ssim"
+    , "G_lossfn_weight": 1.0
+
+    , "G_optimizer_type": "adam"
+    , "G_optimizer_lr": 1e-4
+    // "G_optimizer_lr": 2e-4 
+    , "G_optimizer_wd": 0
+    , "G_optimizer_clipgrad": null
+
+    , "G_scheduler_type": "MultiStepLR"
+    , "G_scheduler_milestones": [100000, 200000, 300000, 400000]
+    // "G_scheduler_milestones": [250000, 400000, 450000, 475000, 500000]
+    , "G_scheduler_gamma": 0.5
+
+    , "G_regularizer_orthstep": null
+    , "G_regularizer_clipstep": null
+
+    , "checkpoint_test": 10000 //5000
+    , "checkpoint_save": 5000
+    , "checkpoint_print": 200
+
+    //swin
+    , "E_decay": 0.999                  // Exponential Moving Average for netG: set 0 to disable; default setting 0.999
+    , "G_optimizer_reuse": true
+    , "G_param_strict": true
+    , "E_param_strict": true 
+  }
+}
