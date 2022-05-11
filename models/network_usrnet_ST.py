@@ -129,7 +129,7 @@ class ResUNet(nn.Module):
 
         
         # self.m_body  = B.sequential(*[B.ResBlock(nc[3], nc[3], bias=False, mode='C'+act_mode+'C') for _ in range(nb)])
-        self.sw_res1 = SW.SwinIR(img_size= 12, patch_size=1, in_chans = nc[3], embed_dim = nc[3],depths=[6,6,6,6] , num_heads=[4, 4, 4, 4], 
+        self.sw_res1 = SW.SwinIR(img_size= 12, patch_size=1, in_chans = nc[3], embed_dim = nc[3],depths=[4,4] , num_heads=[4, 4, 4, 4], 
                                 window_size=3, mlp_ratio=2, qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,
                                 norm_layer=nn.LayerNorm, ape=False, patch_norm=True, use_checkpoint=False, upscale=2, img_range=1.,
                                 upsampler="pixelshuffle", resi_connection='1conv')
@@ -137,17 +137,17 @@ class ResUNet(nn.Module):
         # swin transform on bridge: image 12, window 3, h/w 4
         # SwinIR -> forward_features_only
         #------------------------------
-        self.sw_res2 = SW.SwinIR(img_size= 24, patch_size=1, in_chans = nc[2], embed_dim = nc[2],depths=[6,6,6,6] , num_heads=[4, 4, 4, 4], 
+        self.sw_res2 = SW.SwinIR(img_size= 24, patch_size=1, in_chans = nc[2], embed_dim = nc[2],depths=[4,4] , num_heads=[4, 4, 4, 4], 
                                 window_size=3, mlp_ratio=2, qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,
                                 norm_layer=nn.LayerNorm, ape=False, patch_norm=True, use_checkpoint=False, upscale=2, img_range=1.,
                                 upsampler="pixelshuffle", resi_connection='1conv')
 
-        self.sw_res3 = SW.SwinIR(img_size= 48, patch_size=1, in_chans = nc[1], embed_dim = nc[1], depths=[6,6,6,6] , num_heads=[4, 4, 4, 4], 
+        self.sw_res3 = SW.SwinIR(img_size= 48, patch_size=1, in_chans = nc[1], embed_dim = nc[1], depths=[4,4] , num_heads=[4, 4, 4, 4], 
                                 window_size=3, mlp_ratio=2, qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,
                                 norm_layer=nn.LayerNorm, ape=False, patch_norm=True, use_checkpoint=False, upscale=2, img_range=1.,
                                 upsampler="pixelshuffle", resi_connection='1conv') 
 
-        self.sw_res4 = SW.SwinIR(img_size= 96, patch_size=1, in_chans = nc[0], embed_dim = nc[0],depths=[6,6,6,6] , num_heads=[4, 4, 4, 4], 
+        self.sw_res4 = SW.SwinIR(img_size= 96, patch_size=1, in_chans = nc[0], embed_dim = nc[0],depths=[4,4] , num_heads=[4, 4, 4, 4], 
                                 window_size=3, mlp_ratio=2, qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,
                                 norm_layer=nn.LayerNorm, ape=False, patch_norm=True, use_checkpoint=False, upscale=2, img_range=1.,
                                 upsampler="pixelshuffle", resi_connection='1conv') 
